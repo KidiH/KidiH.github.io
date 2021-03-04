@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<!-- affinity group data, circle rotation, auto-resize svg image, chord function, configuration -->
+<title>Family Circle/Chord</title>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<style>
+
+    #visual {
+        font: 14px sans-serif;
+    }
+
+    .chord path {
+        fill-opacity: .67;
+        stroke: #000;
+        stroke-width: 0px;
+    }
+
+    @media only screen and (min-device-width: 320px) and (max-device-width: 568px) {
+        #visual {
+            -webkit-user-select: none;
+            font-size: 1.2em;
+        }
+    }
+
+    @media only screen and (min-device-width: 768px) and (max-device-width: 1024px) {
+        #visual {
+            -webkit-user-select: none;
+        }
+    }
+</style>
+<body>
+<h1>Kidist's Family</h1>
+<div id="graph"></div>
+<div id="res"></div>
+<script>
+
+
+    var visual = document.getElementById("visual");
+
+    // matrix of ADB, EBRD, EIB, IDB, KFW, OPIC, World Bank
+    var matrix = [
+        [ 0, 10, 10, 0, 0, 0, 0, 10,0],
+        [ 10, 0, 10, 0, 0, 10, 10, 10,0],
+        [ 10, 10, 0, 10, 10, 0, 0, 10,10],
+        [ 0, 0, 10, 0, 10, 0, 0, 10,10],
+        [ 0, 0, 10, 10, 0, 0, 0, 10,10],
+        [ 0, 10, 0, 0, 0, 0, 10, 10,0],
+        [ 0, 10, 0, 0, 0, 10, 0, 10,0],
+        [ 10, 10, 10, 10, 10, 10, 10, 0,0],
+        [ 0, 0, 10, 10, 10, 0, 0, 0,0]
+    ];
+
+    var colorMat = [
+        ["#386cb0","#e08d26", "#e08d26","#166000","#238443","#fb7e17","#75b3ff","#e08d26","#386cb0"],
+        ['#e08d26', '#FFB399', '#FFB399', '#FFFF99', '#00B3E6','#D0F0C0', '#50C878', '#50C878', '#99FF99'],
+        ['#e08d26', '#FFB399', '#809900', '#00A86B', '#00A86B', '#66991A', '#FF99E6', '#00A86B', '#FF1A66'],
+        ['#4D8000', '#B33300', '#CC80CC', '#66664D', '#FFB399', '#E666FF', '#4DB3FF', '#386cb0', "#166000"],
+        ["#386cb0","#f0027f", "#bf5b17","#FFB399","#238443","#fb7e17","#75b3ff","#386cb0","#166000"],
+        ["#386cb0","#9DC183", "#bf5b17","#166000","#238443","#fb7e17","#666666","#75b3ff","#386cb0"],
+        ["#386cb0","#50C878", "#bf5b17","#166000","#238443","#666666","#75b3ff","#75b3ff","#386cb0"],
+        ["#e08d26","#f0027f", "#bf5b17","#386cb0","#386cb0","#fb7e17","#75b3ff","#d01501","#386cb0"],
+        ["#386cb0","#f0027f", "#FF1A66","#166000","#166000","#fb7e17","#75b3ff","#d01501","#386cb0"]
+    ]
+
+    var array = [ "Adugna", "Workeye", "Yeshita", "Tenebeb", "Temesgen", "Alemu", "Dad's Mom", "Kidist", "Misrak"];
+
+    var rotation = .99;
+
+    var chord_options = {
+        "gnames": array,
+        "rotation": rotation,
+        "colors": ["#7fc97f", "#beaed4", "#fdc086", "#ba56f5", "#386cb0","#f0027f", "#bf5b17","#166000","#238443","#fb7e17","#75b3ff","#d01501"]
+    };
+
+    function Chord(container, options, matrix) {
+
+        // initialize the chord configuration variables
+        var config = {
+
+            rotation: 0,
+            textgap: 10,
+            colors: ["#7fc97f", "#beaed4", "#fdc086", "#ba56f5", "#386cb0", "#f0027f", "#bf5b17", "#666666", "#ffff99", "#386cb0", "#f0027f", "#bf5b17", "#666666"]
+        };
+
+        // add options to the chord configuration object
+        if (options) {
+            extend(config, options);
+        }
+        console.log(config, options)
+
+        let parentElement = 'graph';
+        var elmnt = document.getElementById("graph");
+
+        var margin = {top: 20, right: 20, bottom: 20, left: 20};
+        var width = 900 - margin.left - margin.right;
+            height = 900  - margin.top - margin.bottom;
+
+        // set chord visualization variables from the configuration object
+        var offset = Math.PI * config.rotation,
+            // width = config.width,
+            // height = config.height,
+            textgap = config.textgap,
+            colors = config.colors;
+
+        // set viewBox and aspect ratio to enable a resize of the visual dimensions
+        var viewBoxDimensions = "0 0 " + width + " " + height,
+            aspect = width / height;
+
+        if (config.gnames) {
+            gnames = config.gnames;
+        } else {
+            // make a list of names
+            gnames = [];
+            for (var i=97; i<matrix.length; i++) {
+                gnames.push(String.fromCharCode(i));
+            }
+        }
+
+        // start the d3 magic
+        var chord = d3.layout.chord()
+            .padding(.05)
+            .sortSubgroups(d3.descending)
+            .matrix(matrix);
+
+        var innerRadius = Math.min(width, height) * .31,
+            outerRadius = innerRadius * 1.1;
+
+        var fill = d3.scale.ordinal()
+            .domain(d3.range(matrix.length-1))
+            .range(colors);
+
+        var svg = d3.select("body").append("svg")
+            .attr("id", "visual")
+            .attr("viewBox", viewBoxDimensions)
+            .attr("preserveAspectRatio", "xMinYMid")    // add viewBox and preserveAspectRatio
+            .attr("width", width)
+            .attr("height", height)
+            .append("g")
+            .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+        var g = svg.selectAll("g.group")
+            .data(chord.groups)
+            .enter().append("svg:g")
+            .attr("class", "group");
+
+        g.append("svg:path")
+            .style("fill", function(d) { return fill(d.index); })
+            .style("stroke", function(d) { return fill(d.index); })
+            .attr("id", function(d, i) { return "group" + d.index; })
+            .attr("d", d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius).startAngle(startAngle).endAngle(endAngle))
+            .on("mouseover", fade(.1))
+            .on("mouseout", fade(1));
+
+        g.append("svg:text")
+            .each(function(d) {d.angle = ((d.startAngle + d.endAngle) / 2) + offset; })
+            .attr("dy", ".35em")
+            .attr("text-anchor", function(d) { return d.angle > Math.PI ? "end" : null; })
+            .attr("transform", function(d) {
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+                    + "translate(" + (outerRadius + textgap) + ")"
+                    + (d.angle > Math.PI ? "rotate(180)" : "");
+            })
+            .text(function(d) { return gnames[d.index]; });
+
+        svg.append("g")
+            .attr("class", "chord")
+            .selectAll("path")
+            .data(chord.chords)
+            .enter().append("path")
+            .attr("d", d3.svg.chord().radius(innerRadius).startAngle(startAngle).endAngle(endAngle))
+            .style("fill", function(d) {
+                if(d.source.index === 1 && d.target.index === 6){
+                    console.log(colorMat[d.source.index][d.target.index] + " " + gnames[d.source.index] + " " + gnames[d.target.index])
+                    console.log(colorMat[d.target.index][d.source.index] + " " + gnames[d.source.index] + " " + gnames[d.target.index])
+
+                }
+                console.log(colorMat[d.source.index][d.target.index])
+                return colorMat[d.source.index][d.target.index];})
+            .style("opacity", 1)
+            .append("svg:title")
+            .text(function(d) {
+                return  d.source.value + "  " + gnames[d.source.index] + " shared with " + gnames[d.target.index];
+            });
+
+        // helper functions start here
+
+        function startAngle(d) {
+            return d.startAngle + offset;
+        }
+
+        function endAngle(d) {
+            return d.endAngle + offset;
+        }
+
+        function extend(a, b) {
+            for( var i in b ) {
+                a[ i ] = b[ i ];
+            }
+        }
+
+        // Returns an event handler for fading a given chord group.
+        function fade(opacity) {
+            return function(g, i) {
+                svg.selectAll(".chord path")
+                    .filter(function(d) { return d.source.index != i && d.target.index != i; })
+                    .transition()
+                    .style("opacity", opacity);
+            };
+        }
+
+
+        window.onresize = function() {
+            var targetWidth = (window.innerWidth < width)? window.innerWidth : width;
+
+            var svg = d3.select("#visual")
+                .attr("width", targetWidth)
+                .attr("height", targetWidth / aspect);
+        }
+
+
+    }
+
+    window.onload = function() {
+        Chord(visual, chord_options, matrix);
+    }
+
+    d3.select(self.frameElement).style("height", "600px");
+
+    // create svg element
+    var svg = d3.select("#res").append("svg").attr("width", 1500).attr("height",200)
+
+    // With Hex code
+
+
+    // With Hex code
+    svg.append("circle").attr("cx",50).attr("cy",100).attr("r",20)
+        .style("fill", "#FFB399");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 20)
+        .attr("y", 150)
+        .text("Marriage");
+
+    svg.append("circle").attr("cx",175).attr("cy",100).attr("r",20)
+        .style("fill", "#808080");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 100)
+        .attr("y", 150)
+        .text("Separated but");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 100)
+        .attr("y", 170)
+        .text("not divorced");
+
+    // With RGBA (last number is the opacity)
+    svg.append("circle").attr("cx",300).attr("cy",100).attr("r",20)
+        .style("fill", "#50C878" )
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 225)
+        .attr("y", 150)
+        .text("Close Parent-Child");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 225)
+        .attr("y", 170)
+        .text("r/ship");
+
+    svg.append("circle").attr("cx",450).attr("cy",100).attr("r",20)
+        .style("fill", "#D0F0C0" )
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 375)
+        .attr("y", 150)
+        .text("Distant Parent-Child");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 375)
+        .attr("y", 170)
+        .text("r/ship");
+
+
+    // With RGB
+    svg.append("circle").attr("cx",575).attr("cy",100).attr("r",20)
+        .style("fill", "#386cb0" )
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 530)
+        .attr("y", 150)
+        .text("Close G.parent");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 530)
+        .attr("y", 170)
+        .text("- G.Child r/ship");
+
+    svg.append("circle").attr("cx", 725).attr("cy",100).attr("r",20)
+        .style("fill", "#75b3ff" )
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 650)
+        .attr("y", 150)
+        .text("Distant G.parent");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 650)
+        .attr("y", 170)
+        .text("- G.Child r/ship");
+
+    svg.append("circle").attr("cx", 875).attr("cy",100).attr("r",20)
+        .style("fill", "#FF1A66" )
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 805)
+        .attr("y", 150)
+        .text("Adoptive Family");
+
+    svg.append("circle").attr("cx",1000).attr("cy",100).attr("r",20)
+        .style("fill", "#e08d26");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 920)
+        .attr("y", 150)
+        .text("Family Friend");
+
+
+
+</script>
+
+</body>
+</html>
