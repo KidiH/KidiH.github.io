@@ -4,6 +4,14 @@
 <!-- affinity group data, circle rotation, auto-resize svg image, chord function, configuration -->
 <title>Family Circle/Chord</title>
 <script src="https://d3js.org/d3.v3.min.js"></script>
+<!-- Load CSS libraries -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat&family=Poppins:wght@300&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<!-- GOOGLE FONTS -->
+<link href='https://fonts.googleapis.com/css?family=Roboto:400,100,300,500,400italic,300italic' rel='stylesheet' type='text/css'>
+
 <style>
 
     #visual {
@@ -30,9 +38,36 @@
     }
 </style>
 <body>
-<h1>Kidist's Family</h1>
-<div id="graph"></div>
-<div id="res"></div>
+<div class="row justify-content-center">
+    <div class="align-self-center">
+        <h1>Kidist's Family</h1>
+    </div>
+</div>
+<div class="container-fluid">
+
+
+    <div class="row" style="height: 60vh">
+
+        <div class="col-6">
+            <div class="row justify-content-center" style="height: 100%">
+                <div class="align-self-center" id="res"  style="padding-left: 60%"></div>
+            </div>
+        </div>
+        <div class="col-6 border-left pl-4" >
+            <div class="row justify-content-center" style="height: 100%">
+                <div class="align-self-center justify-content-center">
+                    <p>Visualization of the family tree in conventional tree. </p>
+                    <img src="screenshot.png" alt="Family Tree" style="height: 50%; width: 70%">
+
+                </div>
+            </div>
+        </div>
+</div>
+    <div class="row justify-content-center">
+        <div class="align-self-center">
+            <div id="graph"></div>
+        </div>
+    </div>
 <script>
 
 
@@ -40,30 +75,34 @@
 
     // matrix of ADB, EBRD, EIB, IDB, KFW, OPIC, World Bank
     var matrix = [
-        [ 0, 10, 10, 0, 0, 0, 0, 10,0],
-        [ 10, 0, 10, 0, 0, 10, 10, 10,0],
-        [ 10, 10, 0, 10, 10, 0, 0, 10,10],
-        [ 0, 0, 10, 0, 10, 0, 0, 10,10],
-        [ 0, 0, 10, 10, 0, 0, 0, 10,10],
-        [ 0, 10, 0, 0, 0, 0, 10, 10,0],
-        [ 0, 10, 0, 0, 0, 10, 0, 10,0],
-        [ 10, 10, 10, 10, 10, 10, 10, 0,0],
-        [ 0, 0, 10, 10, 10, 0, 0, 0,0]
+        [ 0, 10, 10, 0, 0, 0, 0, 10,0,0,0],
+        [ 10, 0, 10, 0, 0, 10, 10, 10,0,0,0],
+        [ 10, 10, 0, 10, 10, 0, 0, 10,10,10,10],
+        [ 0, 0, 10, 0, 10, 0, 0, 10,10,10,10],
+        [ 0, 0, 10, 10, 0, 0, 0, 10,10,0,10],
+        [ 0, 10, 0, 0, 0, 0, 10, 10,0,0,0],
+        [ 0, 10, 0, 0, 0, 10, 0, 10,0,0,0],
+        [ 10, 10, 10, 10, 10, 10, 10, 0,0,0,0],
+        [ 0, 0, 10, 10, 10, 0, 0, 0,0,0,0],
+        [ 0, 0, 10, 10, 0, 0, 0, 0,0,0,10],
+        [ 0, 0, 10, 10, 10, 0, 0, 0,0,10,0]
     ];
 
     var colorMat = [
         ["#386cb0","#e08d26", "#e08d26","#166000","#238443","#fb7e17","#75b3ff","#e08d26","#386cb0"],
         ['#e08d26', '#FFB399', '#FFB399', '#FFFF99', '#00B3E6','#D0F0C0', '#50C878', '#50C878', '#99FF99'],
-        ['#e08d26', '#FFB399', '#809900', '#00A86B', '#00A86B', '#66991A', '#FF99E6', '#00A86B', '#FF1A66'],
-        ['#4D8000', '#B33300', '#CC80CC', '#66664D', '#FFB399', '#E666FF', '#4DB3FF', '#386cb0', "#166000"],
-        ["#386cb0","#f0027f", "#bf5b17","#FFB399","#238443","#fb7e17","#75b3ff","#386cb0","#166000"],
+        ['#e08d26', '#FFB399', '#809900', '#00A86B', '#00A86B', '#66991A', '#FF99E6', '#00A86B', '#CC80CC',"#FF1A66","#386cb0"],
+        ['#4D8000', '#B33300', '#CC80CC', '#66664D', '#FFB399', '#E666FF', '#4DB3FF', '#386cb0', "#CC80CC","#50C878","#50C878" ],
+        ["#386cb0","#f0027f", "#bf5b17","#FFB399","#238443","#fb7e17","#75b3ff","#386cb0","#CC80CC","#386cb0","#B33300"],
         ["#386cb0","#9DC183", "#bf5b17","#166000","#238443","#fb7e17","#666666","#75b3ff","#386cb0"],
         ["#386cb0","#50C878", "#bf5b17","#166000","#238443","#666666","#75b3ff","#75b3ff","#386cb0"],
         ["#e08d26","#f0027f", "#bf5b17","#386cb0","#386cb0","#fb7e17","#75b3ff","#d01501","#386cb0"],
-        ["#386cb0","#f0027f", "#FF1A66","#166000","#166000","#fb7e17","#75b3ff","#d01501","#386cb0"]
+        ["#386cb0","#f0027f", "#CC80CC","#CC80CC","#CC80CC","#fb7e17","#75b3ff","#d01501","#386cb0"],
+        ['#4D8000', '#B33300', "#FF1A66", "#50C878", '#FFB399', '#E666FF', '#4DB3FF', '#386cb0', "#166000","#50C878","#FFB399","#FFB399"],
+        ['#4D8000', '#B33300', "#FF1A66", "#50C878", '#FFB399', '#E666FF', '#4DB3FF', '#386cb0', "#166000","#FFB399","#FFB399","#FFB399"]
     ]
 
-    var array = [ "Adugna", "Workeye", "Yeshita", "Tenebeb", "Temesgen", "Alemu", "Dad's Mom", "Kidist", "Misrak"];
+    var array = [ "Adugna", "Workeye", "Yeshita", "Tenebeb", "Temesgen", "Alemu", "Etenesh", "Kidist", "Misrak", "Amohay", "Tamir"];
 
     var rotation = .99;
 
@@ -228,7 +267,7 @@
     d3.select(self.frameElement).style("height", "600px");
 
     // create svg element
-    var svg = d3.select("#res").append("svg").attr("width", 1500).attr("height",200)
+    var svg = d3.select("#res").append("svg").attr("width", 1500).attr("height",400)
 
     // With Hex code
 
@@ -322,7 +361,7 @@
         .text("- G.Child r/ship");
 
     svg.append("circle").attr("cx", 875).attr("cy",100).attr("r",20)
-        .style("fill", "#FF1A66" )
+        .style("fill", "#CC80CC" )
     svg.append("svg:text")
         .attr("dy", ".35em")
         .attr("text-anchor", "center")
@@ -330,14 +369,32 @@
         .attr("y", 150)
         .text("Adoptive Family");
 
-    svg.append("circle").attr("cx",1000).attr("cy",100).attr("r",20)
+    svg.append("circle").attr("cx",50).attr("cy",250).attr("r",20)
         .style("fill", "#e08d26");
     svg.append("svg:text")
         .attr("dy", ".35em")
         .attr("text-anchor", "center")
-        .attr("x", 920)
-        .attr("y", 150)
+        .attr("x", 25)
+        .attr("y", 300)
         .text("Family Friend");
+
+    svg.append("circle").attr("cx",200).attr("cy",250).attr("r",20)
+        .style("fill", "#FF1A66");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 150)
+        .attr("y", 300)
+        .text("Breast Cancer");
+
+    svg.append("circle").attr("cx",320).attr("cy",250).attr("r",20)
+        .style("fill", "#b33300");
+    svg.append("svg:text")
+        .attr("dy", ".35em")
+        .attr("text-anchor", "center")
+        .attr("x", 300)
+        .attr("y", 300)
+        .text("War");
 
 
 
