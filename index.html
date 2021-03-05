@@ -223,7 +223,7 @@
             .style("opacity", 1)
             .append("svg:title")
             .text(function(d) {
-                return  d.source.value + "  " + gnames[d.source.index] + " shared with " + gnames[d.target.index];
+                return   gnames[d.source.index] + " and " + gnames[d.target.index];
             });
 
         // helper functions start here
